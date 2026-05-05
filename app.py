@@ -12,8 +12,11 @@ def home():
         file = request.files['file']
         text = ""
 
-        # محاولة استخراج نص عادي
-        with pdfplumber.open(file) as pdf:
+        # اقرأ الملف كـ bytes مرة واحدة
+        file_bytes = file.read()
+
+        # استخراج النص العادي
+        with pdfplumber.open(file_bytes) as pdf:
             for page in pdf.pages:
                 t = page.extract_text()
                 if t:
@@ -21,20 +24,22 @@ def home():
 
         # إذا النص قليل → استخدم OCR
         if len(text.strip()) < 50:
-            images = convert_from_bytes(file.read())
+            images = convert_from_bytes(file_bytes)
             for img in images:
                 text += pytesseract.image_to_string(img)
 
+        # استخراج الأرقام
         numbers = re.findall(r'\d+', text)
 
         return "<br>".join(numbers)
 
     return '''
-    <h2>رفع PDF</h2>
+    <h2>رفع ملف PDF</h2>
     <form method="post" enctype="multipart/form-data">
-    <input type="file" name="file">
+    <input type="file" name="file" required>
     <button type="submit">استخراج</button>
     </form>
     '''
 
-app.run()
+if __name__ == '__main__':
+    app.run(host="0.0.0.0", port=10000)
