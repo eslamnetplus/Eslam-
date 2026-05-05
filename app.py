@@ -3,6 +3,7 @@ import pdfplumber
 import pytesseract
 from pdf2image import convert_from_bytes
 import re
+import io
 
 app = Flask(__name__)
 
@@ -12,11 +13,14 @@ def home():
         file = request.files['file']
         text = ""
 
-        # اقرأ الملف كـ bytes مرة واحدة
+        # اقرأ الملف كـ bytes
         file_bytes = file.read()
 
+        # تحويله إلى file-like object
+        pdf_file = io.BytesIO(file_bytes)
+
         # استخراج النص العادي
-        with pdfplumber.open(file_bytes) as pdf:
+        with pdfplumber.open(pdf_file) as pdf:
             for page in pdf.pages:
                 t = page.extract_text()
                 if t:
